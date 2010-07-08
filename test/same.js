@@ -1406,7 +1406,6 @@ test('mixed object/array with references to self wont loop', function(){
     equals(QUnit.equiv(circularA, circularB), false, "Should not repeat test on object/array (unambigous test)");
 });
 
-
 test("Test that must be done at the end because they extend some primitive's prototype", function() {
     // Try that a function looks like our regular expression.
     // This tests if we check that a and b are really both instance of RegExp
@@ -1419,5 +1418,63 @@ test("Test that must be done at the end because they extend some primitive's pro
     // This test will ensures it works in both ways, and ALSO especially that we can make differences
     // between RegExp and Function constructor because typeof on a RegExpt instance is "function"
     equals(QUnit.equiv(function () {}, re), false, "Same conversely, but ensures that function and regexp are distinct because their constructor are different");
+});
+
+module("testers");
+
+test("oneOf", function() {
+	oneOf(['a','b','c'], 'a', 'string in array - first');
+	oneOf(['a','b','c'], 'b', 'string in array - middle');
+	oneOf(['a','b','c'], 'c', 'string in array - last');
+	oneOf([[1,2],[10,20]], [10,20], 'array in array');
+	oneOf([{},{},{}], {}, 'equivalent objects');
+});
+
+test("notOneOf", function() {
+	notOneOf(['a','b','c'], 'w', 'string in array - first');
+	notOneOf([[1,2],[10,20]], [10,21], 'array in array');
+	notOneOf([[1,2],[10,20]], ["10","20"], 'array in array with strings');
+	notOneOf([new RegExp, new String], new Date, 'empty object instances');
+	notOneOf([], undefined, 'empty array');
+});
+
+test("throwsError", function() {
+	function thrower1() {
+		throw 'Errored!';
+	}
+	function thrower2() {
+		throw new TypeError("Type!");
+	}
+	function thrower3() {
+		var e = {message:"Custom!"};
+		throw e;
+	}
+	throwsError(thrower1, 'Errored!', 'throwing string');
+	throwsError(thrower2, 'Type!', 'throwing TypeError instance');
+	throwsError(thrower3, 'Custom!', 'throwing custom object');
+});
+
+test("truthy", function() {
+	truthy("1", "1 as string");
+	truthy("0", "0 as string");
+	truthy(1, "1 as number");
+	truthy("a", "alpha string");
+	truthy([], "empty array");
+	truthy({}, "empty object");
+	truthy(function(){}, "empty function");
+	truthy(new Date, "empty instance");
+	truthy(new RegExp(""), "empty RegExp");
+	truthy(Boolean(1), "boolean object");
+	truthy(true, "boolean primitive");
+});
+
+test("falsy", function() {
+	falsy("", "(empty string)");
+	falsy(Boolean(0), "boolean object");
+	falsy(false, "boolean primative");
+	falsy(0, "0 as number");
+	falsy(null, "null");
+	falsy(undefined, "undefined");
+	falsy(NaN, "NaN");
 });
 

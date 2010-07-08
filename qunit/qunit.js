@@ -305,7 +305,52 @@ var QUnit = {
 	notStrictEqual: function(actual, expected, message) {
 		push(expected !== actual, actual, expected, message);
 	},
-	
+
+	oneOf: function(arr, expected, message) {
+		var found = false, i, len;
+		for (i = 0, len = arr.length; i < len; i++) {
+			if (QUnit.equiv(arr[i], expected)) {
+				found = true;
+				break;
+			}
+		}
+		push(found, arr, expected, message);
+	},
+
+	notOneOf: function(arr, expected, message) {
+		var found = false, i, len;
+		for (i = 0, len = arr.length; i < len; i++) {
+			if (QUnit.equiv(arr[i], expected)) {
+				found = true;
+				break;
+			}
+		}
+		push(!found, arr, expected, message);
+	},
+
+	instanceOf: function(obj, type, message) {
+		push(obj instanceof type, obj, expected, message);
+	},
+
+	throwsError: function(fn, expected, message) {
+		var error;
+		try {
+			fn();
+		}
+		catch (e) {
+			error = e.message || String(e);
+		}
+		push(error == expected, error, expected, message);
+	},
+
+	falsy: function(obj, message) {
+		push(obj && obj.valueOf ? !obj.valueOf() : !obj, true, obj, message);
+  },
+
+  truthy: function(obj, message) {
+		push(obj && obj.valueOf ? !!obj.valueOf() : !!obj, true, obj, message);
+  },
+
 	start: function() {
 		// A slight delay, to avoid any current callbacks
 		if ( window.setTimeout ) {
