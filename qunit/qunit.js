@@ -15,8 +15,8 @@ var QUnit = {
 	// Initialize the configuration options
 	init: function() {
 		config = {
-			stats: { all: 0, bad: 0 },
-			moduleStats: { all: 0, bad: 0 },
+			stats: {all: 0, bad: 0},
+			moduleStats: {all: 0, bad: 0},
 			started: +new Date,
 			updateRate: 1000,
 			blocking: false,
@@ -54,7 +54,7 @@ var QUnit = {
 
 			config.currentModule = name;
 			config.moduleTestEnvironment = testEnvironment;
-			config.moduleStats = { all: 0, bad: 0 };
+			config.moduleStats = {all: 0, bad: 0};
 
 			QUnit.moduleStart( name, testEnvironment );
 		});
@@ -367,7 +367,41 @@ var QUnit = {
 	
 	// Safe object type checking
 	is: function( type, obj ) {
-		return Object.prototype.toString.call( obj ) === "[object "+ type +"]";
+		return QUnit.objectType( obj ) == type;
+	},
+
+	objectType: function( obj ) {
+		if (typeof obj === "undefined") {
+				return "undefined";
+
+		// consider: typeof null === object
+		}
+		if (obj === null) {
+				return "null";
+		}
+
+		var type = Object.prototype.toString.call( obj )
+			.match(/^\[object\s(.*)\]$/)[1] || '';
+
+		switch (type) {
+				case 'Number':
+						if (isNaN(obj)) {
+								return "nan";
+						} else {
+								return "number";
+						}
+				case 'String':
+				case 'Boolean':
+				case 'Array':
+				case 'Date':
+				case 'RegExp':
+				case 'Function':
+						return type.toLowerCase();
+		}
+		if (typeof obj === "object") {
+				return "object";
+		}
+		return undefined;
 	},
 	
 	// Logging callbacks
@@ -394,7 +428,7 @@ var config = {
 
 // Load paramaters
 (function() {
-	var location = window.location || { search: "", protocol: "file:" },
+	var location = window.location || {search: "", protocol: "file:"},
 		GETParams = location.search.slice(1).split('&');
 
 	for ( var i = 0; i < GETParams.length; i++ ) {
@@ -690,60 +724,11 @@ QUnit.equiv = function () {
     var callers = []; // stack to decide between skip/abort functions
     var parents = []; // stack to avoiding loops from circular referencing
 
-
-    // Determine what is o.
-    function hoozit(o) {
-        if (QUnit.is("String", o)) {
-            return "string";
-            
-        } else if (QUnit.is("Boolean", o)) {
-            return "boolean";
-
-        } else if (QUnit.is("Number", o)) {
-
-            if (isNaN(o)) {
-                return "nan";
-            } else {
-                return "number";
-            }
-
-        } else if (typeof o === "undefined") {
-            return "undefined";
-
-        // consider: typeof null === object
-        } else if (o === null) {
-            return "null";
-
-        // consider: typeof [] === object
-        } else if (QUnit.is( "Array", o)) {
-            return "array";
-        
-        // consider: typeof new Date() === object
-        } else if (QUnit.is( "Date", o)) {
-            return "date";
-
-        // consider: /./ instanceof Object;
-        //           /./ instanceof RegExp;
-        //          typeof /./ === "function"; // => false in IE and Opera,
-        //                                          true in FF and Safari
-        } else if (QUnit.is( "RegExp", o)) {
-            return "regexp";
-
-        } else if (typeof o === "object") {
-            return "object";
-
-        } else if (QUnit.is( "Function", o)) {
-            return "function";
-        } else {
-            return undefined;
-        }
-    }
-
     // Call the o related callback with the given arguments.
     function bindCallbacks(o, callbacks, args) {
-        var prop = hoozit(o);
+        var prop = QUnit.objectType(o);
         if (prop) {
-            if (hoozit(callbacks[prop]) === "function") {
+            if (QUnit.objectType(callbacks[prop]) === "function") {
                 return callbacks[prop].apply(callbacks, args);
             } else {
                 return callbacks[prop]; // or undefined
@@ -777,11 +762,11 @@ QUnit.equiv = function () {
             },
 
             "date": function (b, a) {
-                return hoozit(b) === "date" && a.valueOf() === b.valueOf();
+                return QUnit.objectType(b) === "date" && a.valueOf() === b.valueOf();
             },
 
             "regexp": function (b, a) {
-                return hoozit(b) === "regexp" &&
+                return QUnit.objectType(b) === "regexp" &&
                     a.source === b.source && // the regex itself
                     a.global === b.global && // and its modifers (gmi) ...
                     a.ignoreCase === b.ignoreCase &&
@@ -802,7 +787,7 @@ QUnit.equiv = function () {
                 var len;
 
                 // b could be an object literal here
-                if ( ! (hoozit(b) === "array")) {
+                if ( ! (QUnit.objectType(b) === "array")) {
                     return false;
                 }   
                 
@@ -880,7 +865,7 @@ QUnit.equiv = function () {
         return (function (a, b) {
             if (a === b) {
                 return true; // catch the most you can
-            } else if (a === null || b === null || typeof a === "undefined" || typeof b === "undefined" || hoozit(a) !== hoozit(b)) {
+            } else if (a === null || b === null || typeof a === "undefined" || typeof b === "undefined" || QUnit.objectType(a) !== QUnit.objectType(b)) {
                 return false; // don't lose time with error prone cases
             } else {
                 return bindCallbacks(a, callbacks, [b, a]);
